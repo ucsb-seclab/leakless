@@ -17,9 +17,21 @@ void mem_to_mem(int *dst, int *src) {
   *dst = *src;
 }
 
-void writemem(int *in, int val) {
+#ifdef __x86_64__
+
+void writemem(void *nope, void *nope2, void *nope3, void *nope4, void *nope5, void *nope6, void **in, void *val) {
   *in = val;
 }
+
+#elif __i386__
+
+void writemem(void **in, void *val) {
+  *in = val;
+}
+
+#else
+# error Unsopported arch
+#endif
 
 int do_read() {
   char buffer[100];
