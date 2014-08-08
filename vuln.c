@@ -1,4 +1,4 @@
-#include <alloca.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 char put_me_in_bss[1024] = {0};
@@ -17,25 +17,13 @@ void mem_to_mem(int *dst, int *src) {
   *dst = *src;
 }
 
-#ifdef __x86_64__
-
-void writemem(void *nope, void *nope2, void *nope3, void *nope4, void *nope5, void *nope6, void **in, void *val) {
-  *in = val;
-}
-
-#elif __i386__
-
 void writemem(void **in, void *val) {
   *in = val;
 }
 
-#else
-# error Unsopported arch
-#endif
-
 int do_read() {
   char buffer[100];
-  read(0, buffer, 1000);
+  read(0, buffer, 10000);
 }
 
 int main() {
