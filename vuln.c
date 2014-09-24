@@ -1,3 +1,7 @@
+// Don't include unistd.h otherwise a secure version of read will be used
+// #include <unistd.h>
+
+#include <alloca.h>
 #include <stdlib.h>
 #include <stdio.h>
 
