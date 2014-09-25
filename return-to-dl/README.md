@@ -42,3 +42,36 @@ reloc->r_info = (R_386_JUMP_SLOT | (symbol - .dynsym) / sizeof(symbol));
 buffer += sizeof(reloc):
 
 pre_plt((reloc - .rel.plt) / sizeof(Elf32_Rel));
+
+Helper classes
+==============
+
+* `MemoryArea`: data structure representing a part of memory, with its
+  start address, its size, a reference to what its relative to
+  (e.g. the `MemoryArea` where we'll write the relocation structure
+  will be relative to the `.rela.dyn` section).
+* `Buffer`: data structure holding information about a buffer where we
+  want to write to things. Typically this will represent to
+  `.bss`. Buffer also keeps track of what part of it has already been
+  allocated (`Buffer.current` points to the next free location) and
+  allows to allocate new `MemoryArea`s with the appropriate
+  alignement.
+
+Exploit-derived classes
+=======================
+
+* `Exploit`: the base class, contains all the architecture- and
+  platform-independent parts of the exploit. It keeps the list of the
+  gadgets, it takes care of collecting all the interesting information
+  about the program from the ELF file and abstracting some utility and
+  memory-related functions (e.g. `write_pointer` and `write_string`)
+  which rely on the abstract `do_writemem` function (which is
+  platform- and program-dependent). Finally, in `jump_to`, contains
+  the core logic for setting up the necessary data structures in the
+  buffers.
+* `CommonGadgetsExploit`: inherits from `Exploit` and introduces
+  architecture-dependent parts, in particular gadgets and
+  function-invocation logic.
+* `ExecveExploit`: very simple class implementing the logic to launch
+  an `execve`, so write a NULL pointer, a "/bin/sh\0" and explicitly
+  look for `execve`. Finally invoke it.
