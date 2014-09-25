@@ -49,7 +49,9 @@ Helper classes
 * `MemoryArea`: data structure representing a part of memory, with its
   start address, its size, a reference to what its relative to
   (e.g. the `MemoryArea` where we'll write the relocation structure
-  will be relative to the `.rela.dyn` section).
+  will be relative to the `.rela.dyn` section). `MemoryArea` also
+  takes care of computing the appropriate index (`MemoryArea.index`)
+  relative to the specified part of memory.
 * `Buffer`: data structure holding information about a buffer where we
   want to write to things. Typically this will represent to
   `.bss`. Buffer also keeps track of what part of it has already been
