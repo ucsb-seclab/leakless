@@ -7,6 +7,19 @@ def align(address, base, of):
 def hex_bytes(string):
     return "".join(map(lambda x: chr(int(x, 16)), filter(len, string.split(" "))))
 
+def findall(sub, string, addend):
+    index = 0 - 1
+    try:
+        while True:
+            index = string.index(sub, index + 1)
+            yield index + addend
+    except ValueError:
+        pass
+
+def find_all_strings(sections, string):
+    result = [list(findall(string, section.data(), section.header.p_vaddr)) for section in sections if string in section.data()]
+    return sum(result, [])
+
 def find_string(sections, string):
     result = [section.header.p_vaddr + section.data().index(string) for section in sections if string in section.data()]
     return first_or_none(result)

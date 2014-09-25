@@ -6,11 +6,20 @@ class Buffer:
         self.current = start
         self.areas = {}
         self.exploit = exploit
-    def allocate(self, size, align_to=None, alignment=None, name=None):
+
+    # TODO: keep track of space left empty and try to reuse it
+    # TODO: add an upper boundary
+    def allocate(self, size, align_to=None, alignment=None, name=None, constraint=lambda x,y: True):
         result = MemoryArea(self.exploit, self.current, size, align_to, alignment)
         self.current += result.size
+
+        while not constraint(result.start, result.index):
+            result = MemoryArea(self.exploit, self.current, size, align_to, alignment)
+            self.current += result.size
+
         if name is not None:
             self.areas[name] = result
+
         return result
 
     def dump(self):
