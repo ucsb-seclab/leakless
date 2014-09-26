@@ -1,11 +1,16 @@
 from utils import align, chunks
 
 class Buffer:
-    def __init__(self, exploit, start):
+    def __init__(self, exploit, start, end=None, size=None):
         self.start = start
         self.current = start
         self.areas = {}
         self.exploit = exploit
+        if size is not None:
+            end = start + size
+        if end is None:
+            end = (1 << exploit.pointer_size * 8) - 1
+        self.end = end
 
     # TODO: keep track of space left empty and try to reuse it
     # TODO: add an upper boundary
@@ -14,9 +19,12 @@ class Buffer:
         self.current += result.size
         prewaste = self.current
 
-        while not constraint(result.start, result.index):
+        while (self.current < self.end) and (not constraint(result.start, result.index)):
             result = MemoryArea(self.exploit, self.current, size, align_to, alignment)
             self.current += result.size
+
+        if self.current > self.end:
+            raise Exception("Couldn't find a position for memory area \"" + str(name) + "\" satisfying the imposed constraints before the end of the available buffer.")
 
         result.wasted = self.current - prewaste
 
