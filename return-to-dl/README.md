@@ -13,7 +13,14 @@ How to test
 
 3. Launch the attack with the desired parameter
 
-    (python ./exploit.py /tmp/vuln $OFFSET; echo ls) | /tmp/vuln
+    (python ./exploit.py /tmp/vuln --offset $OFFSET; echo ls) | /tmp/vuln
+
+You can also just dump to a JSON file all the necessary information to
+perform the exploit:
+
+    python ./exploit.py /tmp/vuln --json
+
+For debugging information, use the `--debug` parameter.
 
 Basic idea
 ==========
@@ -77,3 +84,8 @@ Exploit-derived classes
 * `ExecveExploit`: very simple class implementing the logic to launch
   an `execve`, so write a NULL pointer, a "/bin/sh\0" and explicitly
   look for `execve`. Finally invoke it.
+* `RawDumperExploit`: exploit useful to just collect the information
+  necessary to perform the attack without actually generating the ROP
+  chain. `RawDumperExploit.jump_to` will return as first result an
+  array of tuples `(address, what_to_write_there)`, which, for
+  instance, are used to implement the `--json` parameter.

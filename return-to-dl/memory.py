@@ -12,10 +12,13 @@ class Buffer:
     def allocate(self, size, align_to=None, alignment=None, name=None, constraint=lambda x,y: True):
         result = MemoryArea(self.exploit, self.current, size, align_to, alignment)
         self.current += result.size
+        prewaste = self.current
 
         while not constraint(result.start, result.index):
             result = MemoryArea(self.exploit, self.current, size, align_to, alignment)
             self.current += result.size
+
+        result.wasted = self.current - prewaste
 
         if name is not None:
             self.areas[name] = result
@@ -48,6 +51,7 @@ class MemoryArea:
         self.pointer = self.exploit.ptr2str(self.start)
         self.size = size
         self.end = self.start + self.size
+        self.wasted = -1
 
     def dump(self):
         result = ""
@@ -57,6 +61,7 @@ class MemoryArea:
         result += "Base: " + self.exploit.pointer_format % self.align_to + "\n"
         result += "Alignment: " + str(self.alignment) + "\n"
         result += "Index: " + hex(self.index) + " (" + str(self.index) + ")\n"
+        result += "Wasted: " + str(self.wasted) + "\n"
         result += "Content:\n"
         for chunk in chunks(self.content, self.exploit.pointer_size):
             result += " " * 4 + " ".join(["%.2x" % ord(c) for c in chunk]) + " " + self.exploit.pointer_format % self.exploit.str2ptr(chunk) + "\n"
