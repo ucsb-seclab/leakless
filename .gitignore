@@ -1,0 +1,5 @@
+*.idb
+*.txt
+*.o
+*.pyc
+*.gdb_history
