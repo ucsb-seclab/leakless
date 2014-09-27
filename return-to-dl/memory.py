@@ -1,32 +1,38 @@
-from utils import align, chunks
+from rangeset import RangeSet
+
+from utils import align, chunks, log
 
 class Buffer:
-    def __init__(self, exploit, start, end=None, size=None):
-        self.start = start
-        self.current = start
-        self.areas = {}
+    """Create a Buffer from the specified ranges.
+    Please provide disjoint ranges."""
+    def __init__(self, exploit, ranges):
         self.exploit = exploit
-        if size is not None:
-            end = start + size
-        if end is None:
-            end = (1 << exploit.pointer_size * 8) - 1
-        self.end = end
+        self.areas = {}
+        self.ranges = ranges
 
-    # TODO: keep track of space left empty and try to reuse it
+    # TODO: keep track of spaoce left empty and try to reuse it
     # TODO: add an upper boundary
     def allocate(self, size, align_to=None, alignment=None, name=None, constraint=lambda x,y: True):
-        result = MemoryArea(self.exploit, self.current, size, align_to, alignment)
-        self.current += result.size
-        prewaste = self.current
+        for candidate_range in self.ranges:
+            start, end = candidate_range
 
-        while (self.current < self.end) and (not constraint(result.start, result.index)):
-            result = MemoryArea(self.exploit, self.current, size, align_to, alignment)
-            self.current += result.size
+            result = MemoryArea(self.exploit, start, size, align_to, alignment)
+            start += result.size
 
-        if self.current > self.end:
+            while (start < end) and (not constraint(result.start, result.index)):
+                result = MemoryArea(self.exploit, start, size, align_to, alignment)
+                start += result.size
+
+            if start < end:
+                break
+            else:
+                result = None
+
+        if result is None:
             raise Exception("Couldn't find a position for memory area \"" + str(name) + "\" satisfying the imposed constraints before the end of the available buffer.")
-
-        result.wasted = self.current - prewaste
+        else:
+            # We have to create a hole in the appropriate range
+            self.ranges = self.ranges - RangeSet(result.start, result.end)
 
         if name is not None:
             self.areas[name] = result
@@ -60,10 +66,12 @@ class MemoryArea:
         self.size = size
         self.end = self.start + self.size
         self.wasted = -1
+        if self.index < 0:
+            log("Warning: a negative index has been computed: " + str(self.index))
 
     def dump(self):
         result = ""
-        result += "Start: " + self.exploit.pointer_format % self.start + "\n"
+        result += "Start: " + self.exploit.pointer_format % self.start + " (" + self.exploit.closest_section_from_address(self.start) + ")\n"
         result += "Size: " + self.exploit.pointer_format % self.size + " (" + str(self.size) + ")\n"
         result += "End: " + self.exploit.pointer_format % self.end + "\n"
         result += "Base: " + self.exploit.pointer_format % self.align_to + "\n"

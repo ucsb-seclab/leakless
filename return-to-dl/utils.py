@@ -1,3 +1,4 @@
+import itertools
 import sys
 
 def align(address, base, of):
@@ -42,3 +43,9 @@ def integer_to_bigendian(n):
 
 def bigendian_to_integer(string):
     return string.encode("hex")
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return itertools.izip(a, b)
