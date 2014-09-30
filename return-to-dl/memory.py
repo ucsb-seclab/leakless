@@ -2,6 +2,9 @@ from rangeset import RangeSet
 
 from utils import align, chunks, log
 
+class AllocateFailException(Exception):
+    pass
+
 class Buffer:
     """Create a Buffer from the specified ranges.
     Please provide disjoint ranges."""
@@ -9,35 +12,47 @@ class Buffer:
         self.exploit = exploit
         self.areas = {}
         self.ranges = ranges
+        self.cleanup_ranges()
 
     # TODO: keep track of spaoce left empty and try to reuse it
     # TODO: add an upper boundary
-    def allocate(self, size, align_to=None, alignment=None, name=None, constraint=lambda x,y: True):
-        for candidate_range in self.ranges:
-            start, end = candidate_range
-
+    def allocate(self, size, align_to=None, alignment=None, name=None, constraint=lambda x,y: True, start=None):
+        if start is not None:
             result = MemoryArea(self.exploit, start, size, align_to, alignment)
-            start += result.size
+            if (result.start, result.end) not in self.ranges:
+                raise Exception("The range (" + hex(result.start) + ", " + hex(result.end) + ") is not allowed")
+        else:
+            for candidate_range in self.ranges:
+                log(str(map(hex, candidate_range)))
+                start, end = candidate_range
 
-            while (start < end) and (not constraint(result.start, result.index)):
                 result = MemoryArea(self.exploit, start, size, align_to, alignment)
                 start += result.size
 
-            if start < end:
-                break
-            else:
-                result = None
+                while (start < end) and (not constraint(result.start, result.index)):
+                    result = MemoryArea(self.exploit, start, size, align_to, alignment)
+                    start += result.size
+
+                if start < end:
+                    break
+                else:
+                    log("start > end")
+                    result = None
 
         if result is None:
-            raise Exception("Couldn't find a position for memory area \"" + str(name) + "\" satisfying the imposed constraints before the end of the available buffer.")
+            raise AllocateFailException("Couldn't find a position for memory area \"" + str(name) + "\" satisfying the imposed constraints before the end of the available buffer.")
         else:
             # We have to create a hole in the appropriate range
             self.ranges = self.ranges - RangeSet(result.start, result.end)
+            self.cleanup_ranges()
 
         if name is not None:
             self.areas[name] = result
 
         return result
+
+    def cleanup_ranges(self):
+        self.ranges = RangeSet.mutual_union(*filter(lambda (start, end): start != end, list(self.ranges)))
 
     def dump(self):
         result = ""
