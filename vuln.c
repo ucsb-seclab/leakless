@@ -30,6 +30,10 @@ int do_read() {
   read(0, buffer, 10000);
 }
 
+void deref_and_write_with_offset() {
+  asm("pop eax; pop ebx; pop ecx; mov eax,DWORD PTR [eax]; mov DWORD PTR [eax+ecx*1],ebx; ret;");
+}
+
 int main() {
   do_read();
 }
