@@ -34,6 +34,14 @@ void deref_and_write_with_offset() {
   asm("pop eax; pop ebx; pop ecx; mov eax,DWORD PTR [eax]; mov DWORD PTR [eax+ecx*1],ebx; ret;");
 }
 
+void deref_with_offset_and_save() {
+  asm("pop eax; pop ebx; pop ecx; mov eax, [eax]; mov eax,DWORD PTR [eax+ebx]; mov DWORD PTR [ecx],eax; ret;");
+}
+
+void copy_to_stack() {
+  asm("pop ebx; pop ecx; mov ebx, DWORD PTR [ebx]; mov DWORD PTR [esp+ecx*1],ebx; ret;");
+}
+
 int main() {
   do_read();
 }

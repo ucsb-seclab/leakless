@@ -23,7 +23,6 @@ class Buffer:
                 raise Exception("The range (" + hex(result.start) + ", " + hex(result.end) + ") is not allowed")
         else:
             for candidate_range in self.ranges:
-                log(str(map(hex, candidate_range)))
                 start, end = candidate_range
 
                 result = MemoryArea(self.exploit, start, size, align_to, alignment)

@@ -49,3 +49,6 @@ def pairwise(iterable):
     a, b = itertools.tee(iterable)
     next(b, None)
     return itertools.izip(a, b)
+
+def filter_none(list):
+    return filter(lambda entry: entry is not None, list)
