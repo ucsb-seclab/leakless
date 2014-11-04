@@ -16,9 +16,19 @@ set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 # Architectures and related options
 # ---------------------------------
 
-set(ARCHITECTURES x86)
+set(ARCHITECTURES x86 x86-64)
 
-set(x86_FLAGS "-masm=intel -m32")
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+  set(INTEL_FLAVOR "-mllvm --x86-asm-syntax=intel")
+elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+  set(INTEL_FLAVOR "-masm=intel")
+endif()
+
+set(x86_FLAGS "${INTEL_FLAVOR} -m32")
+set(x86_OFFSET "112")
+
+set(x86-64_FLAGS "${INTEL_FLAVOR} -m64")
+set(x86-64_OFFSET "120")
 
 # Build types and related options
 # -------------------------------
@@ -42,7 +52,7 @@ set(TEST_FLAGS_ld-corrupt "--method=ld-corrupt -l 1")
 # List of tests expected to fail
 # ------------------------------
 
-set(EXPECTED_TO_FAIL test-craft-dl-structs-vuln-x86-full_relro)
+set(EXPECTED_TO_FAIL test-craft-dl-structs-vuln-x86-full_relro test-craft-dl-structs-vuln-x86-64-full_relro)
 
 # Helper library
 # ==============
@@ -83,7 +93,7 @@ foreach(ARCHITECTURE ${ARCHITECTURES})
       set(TEST_NAME "test-${TEST_TYPE}-${TARGET_NAME}")
       set(TEST_FLAGS "${TEST_FLAGS_${TEST_TYPE}}")
       # Invoke the exploit
-      set(EXPLOIT_INVOCATION "${CMAKE_SOURCE_DIR}/${EXPLOIT} ${TEST_FLAGS} --offset 112 $<TARGET_FILE:${TARGET_NAME}>")
+      set(EXPLOIT_INVOCATION "${CMAKE_SOURCE_DIR}/${EXPLOIT} ${TEST_FLAGS} --offset ${${ARCHITECTURE}_OFFSET} $<TARGET_FILE:${TARGET_NAME}>")
       # Command to execute and check of correctness
       set(TEST_INVOCATION "(${EXPLOIT_INVOCATION}; echo '/bin/bash -c \"base64 -d <<< UGFzc2VkCg==\"') | $<TARGET_FILE:${TARGET_NAME}> | grep -E '^Passed$'")
 
