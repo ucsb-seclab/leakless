@@ -16,7 +16,7 @@ set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 # Architectures and related options
 # ---------------------------------
 
-set(ARCHITECTURES x86 x86-64)
+set(ARCHITECTURES "x86;x86-64" CACHE STRING "List of architectures to enable")
 
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
   set(INTEL_FLAVOR "-mllvm --x86-asm-syntax=intel")
