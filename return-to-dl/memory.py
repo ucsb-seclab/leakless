@@ -35,7 +35,6 @@ class Buffer:
                 if start < end:
                     break
                 else:
-                    log("start > end")
                     result = None
 
         if result is None:
@@ -94,5 +93,5 @@ class MemoryArea:
         result += "Wasted: " + str(self.wasted) + "\n"
         result += "Content:\n"
         for chunk in chunks(self.content, self.exploit.pointer_size):
-            result += " " * 4 + " ".join(["%.2x" % ord(c) for c in chunk]) + " " + self.exploit.pointer_format % self.exploit.str2ptr(chunk) + "\n"
+            result += " " * 4 + " ".join(["%.2x" % ord(c) for c in chunk]) + " " + (self.exploit.pointer_format % self.exploit.str2ptr(chunk) if len(chunk) == self.exploit.pointer_size else "") + "\n"
         return result
