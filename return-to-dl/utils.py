@@ -1,6 +1,8 @@
 import itertools
 import sys
 
+verbose = False
+
 def align(address, base, of):
     offset = (address - base) % of
     return address if offset == 0 else address + of - offset
@@ -29,7 +31,8 @@ def first_or_none(list):
     return list[0] if len(list) > 0 else None
 
 def log(string):
-    sys.stderr.write(string + "\n")
+    if verbose:
+        sys.stderr.write(string + "\n")
 
 def chunks(l, n):
     for i in xrange(0, len(l), n):
