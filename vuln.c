@@ -37,25 +37,25 @@ int do_read() {
 
 void deref_and_write_with_offset() {
 #if defined(__x86_64__)
-  asm("pop rax; pop rbx; pop rcx; mov rax,QWORD PTR [rax]; mov QWORD PTR [rax+rcx*1],rbx; ret;");
+  __asm__("pop rax; pop rbx; pop rcx; mov rax,QWORD PTR [rax]; mov QWORD PTR [rax+rcx*1],rbx; ret;");
 #elif defined(__i386__)
-  asm("pop eax; pop ebx; pop ecx; mov eax,DWORD PTR [eax]; mov DWORD PTR [eax+ecx*1],ebx; ret;");
+  __asm__("pop eax; pop ebx; pop ecx; mov eax,DWORD PTR [eax]; mov DWORD PTR [eax+ecx*1],ebx; ret;");
 #endif
 }
 
 void deref_with_offset_and_save() {
 #if defined(__x86_64__)
-  asm("pop rax; pop rbx; pop rcx; mov rax, [rax]; mov rax,QWORD PTR [rax+rbx]; mov QWORD PTR [rcx],rax; ret;");
+  __asm__("pop rax; pop rbx; pop rcx; mov rax, [rax]; mov rax,QWORD PTR [rax+rbx]; mov QWORD PTR [rcx],rax; ret;");
 #elif defined(__i386__)
-  asm("pop eax; pop ebx; pop ecx; mov eax, [eax]; mov eax,DWORD PTR [eax+ebx]; mov DWORD PTR [ecx],eax; ret;");
+  __asm__("pop eax; pop ebx; pop ecx; mov eax, [eax]; mov eax,DWORD PTR [eax+ebx]; mov DWORD PTR [ecx],eax; ret;");
 #endif
 }
 
 void copy_to_stack() {
 #if defined(__x86_64__)
-  asm("pop rbx; pop rcx; mov rbx, QWORD PTR [rbx]; mov QWORD PTR [rsp+rcx*1],rbx; ret;");
+  __asm__("pop rbx; pop rcx; mov rbx, QWORD PTR [rbx]; mov QWORD PTR [rsp+rcx*1],rbx; ret;");
 #elif defined(__i386__)
-  asm("pop ebx; pop ecx; mov ebx, DWORD PTR [ebx]; mov DWORD PTR [esp+ecx*1],ebx; ret;");
+  __asm__("pop ebx; pop ecx; mov ebx, DWORD PTR [ebx]; mov DWORD PTR [esp+ecx*1],ebx; ret;");
 #endif
 }
 
