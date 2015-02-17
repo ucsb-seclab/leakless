@@ -72,6 +72,8 @@ endforeach(ARCHITECTURE)
 # Create targets
 # ==============
 
+add_custom_target(lengths)
+
 foreach(ARCHITECTURE ${ARCHITECTURES})
   foreach(BUILD_TYPE ${BUILD_TYPES})
 
@@ -105,6 +107,11 @@ foreach(ARCHITECTURE ${ARCHITECTURES})
 
       # Add the test
       add_test(NAME "${TEST_NAME}" COMMAND /bin/sh -c "${TEST_INVOCATION}")
+
+      # Add the target to have the length
+      set(TARGET_LEGTH_NAME "length-${TEST_TYPE}-${TARGET_NAME}")
+      add_custom_target("${TARGET_LEGTH_NAME}" COMMAND /bin/sh -c "${EXPLOIT_INVOCATION} --size")
+      add_dependencies(lengths "${TARGET_LEGTH_NAME}")
     endforeach(TEST_TYPE)
 
   endforeach(BUILD_TYPE)
