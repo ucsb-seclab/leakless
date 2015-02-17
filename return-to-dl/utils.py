@@ -55,3 +55,6 @@ def pairwise(iterable):
 
 def filter_none(list):
     return filter(lambda entry: entry is not None, list)
+
+def insert_and_replace(original, insert, offset):
+    return original[:offset] + insert + original[offset + len(insert):]

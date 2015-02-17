@@ -79,6 +79,7 @@ class MemoryArea:
         self.size = size
         self.end = self.start + self.size
         self.wasted = -1
+        self.is_buffered = False
         if self.index < 0:
             log("Warning: a negative index has been computed: " + str(self.index))
 

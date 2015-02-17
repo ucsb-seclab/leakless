@@ -4,18 +4,21 @@
 // #include <alloca.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdint.h>
 
 #if !defined(__x86_64__) && !defined(__i386__)
 #  error "Unsupported architecture"
 #endif
-
 
 char put_me_in_bss[1024] = {0};
 
 int play_with_stack(int i) {
   int *local = alloca(10);
   local[0] = 123;
-  return local[i];
+  intptr_t memcpy_ptr = (intptr_t) memcpy;
+
+  return local[i] + memcpy_ptr;
 }
 
 void add(int *a, int b) {
@@ -56,6 +59,22 @@ void copy_to_stack() {
   __asm__("pop rbx; pop rcx; mov rbx, QWORD PTR [rbx]; mov QWORD PTR [rsp+rcx*1],rbx; ret;");
 #elif defined(__i386__)
   __asm__("pop ebx; pop ecx; mov ebx, DWORD PTR [ebx]; mov DWORD PTR [esp+ecx*1],ebx; ret;");
+#endif
+}
+
+void load_memcpy() {
+#if defined(__x86_64__)
+  __asm__("pop rsi; add rsi,rsp; ret;");
+  __asm__("pop rax; add rsp,rax; ret;");
+#elif defined(__i386__)
+  __asm__("pop eax; pop esi; add esi,esp; mov DWORD PTR [esp+eax], esi; ret;");
+  __asm__("pop ebx; add esp,ebx; ret;");
+#endif
+}
+
+void args() {
+#if defined(__x86_64__)
+  __asm__("pop rdi; pop rsi; pop rdx; ret;");
 #endif
 }
 
