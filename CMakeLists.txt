@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(leakless)
 
 set(VULN vuln.c)
-set(EXPLOIT return-to-dl/exploit.py)
+set(EXPLOIT exploit.py)
 
 # Compiler flags
 # ==============
