@@ -72,7 +72,9 @@ endforeach(ARCHITECTURE)
 # Create targets
 # ==============
 
-add_custom_target(lengths)
+add_custom_target(length)
+add_custom_target(json)
+add_custom_target(ropl)
 
 foreach(ARCHITECTURE ${ARCHITECTURES})
   foreach(BUILD_TYPE ${BUILD_TYPES})
@@ -111,7 +113,18 @@ foreach(ARCHITECTURE ${ARCHITECTURES})
       # Add the target to have the length
       set(TARGET_LEGTH_NAME "length-${TEST_TYPE}-${TARGET_NAME}")
       add_custom_target("${TARGET_LEGTH_NAME}" COMMAND /bin/sh -c "${EXPLOIT_INVOCATION} --size")
-      add_dependencies(lengths "${TARGET_LEGTH_NAME}")
+      add_dependencies(length "${TARGET_LEGTH_NAME}")
+
+      add_custom_command(OUTPUT "${TEST_TYPE}-${TARGET_NAME}.json"
+        COMMAND /bin/sh -c "${EXPLOIT_INVOCATION} -o json" > ${TEST_TYPE}-${TARGET_NAME}.json)
+      add_custom_target("json-${TEST_TYPE}-${TARGET_NAME}" DEPENDS "${TEST_TYPE}-${TARGET_NAME}.json")
+      add_dependencies(json "json-${TEST_TYPE}-${TARGET_NAME}")
+
+      add_custom_command(OUTPUT "${TEST_TYPE}-${TARGET_NAME}.ropl"
+        COMMAND /bin/sh -c "${EXPLOIT_INVOCATION} -o ropl" > ${TEST_TYPE}-${TARGET_NAME}.ropl)
+      add_custom_target("ropl-${TEST_TYPE}-${TARGET_NAME}" DEPENDS "${TEST_TYPE}-${TARGET_NAME}.ropl")
+      add_dependencies(ropl "ropl-${TEST_TYPE}-${TARGET_NAME}")
+
     endforeach(TEST_TYPE)
 
   endforeach(BUILD_TYPE)
